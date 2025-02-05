@@ -18,6 +18,9 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.root_module.addImport("qt", qt_module);
+    exe.root_module.addAnonymousImport("zig.svg", .{
+        .root_source_file = b.path("zig-mark.svg"),
+    });
 
     //    const lib_dynamic_shim = try buildLibQt6DynamicShim(b, .{
     //        .name = "Qt6DynamicShim",
@@ -35,9 +38,6 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.linkLibrary(lib);
-    exe.linkSystemLibrary("Qt6Core");
-    exe.linkSystemLibrary("Qt6Widgets");
-    exe.linkSystemLibrary("Qt6Gui");
 
     b.installArtifact(lib);
     b.installArtifact(exe);
@@ -52,6 +52,24 @@ pub fn build(b: *std.Build) void {
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
+
+    const exe_c = b.addExecutable(.{
+        .name = "qt-c",
+        .target = target,
+        .optimize = optimize,
+    });
+    exe_c.addCSourceFile(.{
+        .file = b.path("src/main.c"),
+    });
+    exe_c.addIncludePath(b.path("include"));
+    exe_c.linkLibC();
+    exe_c.linkLibrary(lib);
+    b.installArtifact(exe_c);
+
+    const run_c_cmd = b.addRunArtifact(exe_c);
+
+    const run_c_step = b.step("run-c", "Run the C version of the app");
+    run_c_step.dependOn(&run_c_cmd.step);
 }
 
 pub fn buildLibQt6DynamicShim(

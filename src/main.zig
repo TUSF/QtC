@@ -22,6 +22,11 @@ pub fn main() !void {
     });
     defer label.deinit();
 
+    const pixmap = qt.Pixmap.init(0, 0);
+    if (pixmap.loadFromData(zig_svg, "svg", 0)) {
+        label.setPixmap(pixmap);
+    }
+
     const layout = layouts.BoxLayout.init(.{
         .direction = .top_to_bottom,
         .parent = window.widget(),
